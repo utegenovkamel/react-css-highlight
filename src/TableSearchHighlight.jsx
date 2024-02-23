@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const data = [
   { id: 1, name: 'Иван Иванов', city: 'Москва', country: 'Россия' },
@@ -12,7 +12,7 @@ const fetchData = (searchQuery) => {
         resolve(data)
       } else {
         const filteredData = data.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
-        resolve(data);
+        resolve(filteredData);
       }
     }, 500);
   });
@@ -41,7 +41,7 @@ const TableSearchHighlight = () => {
     if (!query) return;
 
     const highlight = new Highlight();
-    data.forEach((item) => {
+    for (const item of data) {
       document.querySelectorAll('.searchable').forEach((node) => {
         if (node.textContent.toLowerCase().includes(query.toLowerCase())) {
           const range = new Range();
@@ -51,7 +51,7 @@ const TableSearchHighlight = () => {
           highlight.add(range);
         }
       });
-    });
+    }
 
     CSS.highlights.set('search-highlight', highlight);
   };
