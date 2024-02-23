@@ -3,40 +3,58 @@ import React, { useState, useEffect } from 'react';
 const data = [
   { id: 1, name: 'Иван Иванов', city: 'Москва', country: 'Россия' },
   { id: 2, name: 'John Doe', city: 'New York', country: 'USA' },
-];
+]
+
+const fetchData = (searchQuery) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if(!searchQuery) {
+        resolve(data)
+      } else {
+        const filteredData = data.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        resolve(data);
+      }
+    }, 500);
+  });
+};
 
 const TableSearchHighlight = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [highlighted, setHighlighted] = useState(null);
+  const [data, setData] = useState([]);
+
+  console.log('data',data);
 
   useEffect(() => {
-    if (!CSS.highlights || !searchQuery) {
-      setHighlighted(null);
+    fetchData(searchQuery).then((newData) => {
+      setData(newData);
+      highlightSearch(newData, searchQuery);
+    });
+  }, [searchQuery]);
+
+  const highlightSearch = (data, query) => {
+    if (!CSS.highlights) {
+      console.error("CSS Custom Highlight API не поддерживается.");
       return;
     }
 
-    const ranges = [];
-    document.querySelectorAll('.searchable').forEach((node) => {
-      const index = node.textContent
-        .toLowerCase()
-        .indexOf(searchQuery.toLowerCase());
-      if (index >= 0) {
-        const range = new Range();
-        range.setStart(node.firstChild, index);
-        range.setEnd(node.firstChild, index + searchQuery.length);
-        ranges.push(range);
-      }
-    });
+    CSS.highlights.clear();
+    if (!query) return;
 
     const highlight = new Highlight();
-    ranges.forEach((range) => highlight.add(range));
-    CSS.highlights.set('search-highlight', highlight);
-    setHighlighted(highlight);
+    data.forEach((item) => {
+      document.querySelectorAll('.searchable').forEach((node) => {
+        if (node.textContent.toLowerCase().includes(query.toLowerCase())) {
+          const range = new Range();
+          const index = node.textContent.toLowerCase().indexOf(query.toLowerCase());
+          range.setStart(node.firstChild, index);
+          range.setEnd(node.firstChild, index + query.length);
+          highlight.add(range);
+        }
+      });
+    });
 
-    return () => {
-      CSS.highlights.delete('search-highlight');
-    };
-  }, [searchQuery]);
+    CSS.highlights.set('search-highlight', highlight);
+  };
 
   return (
     <div>
